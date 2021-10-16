@@ -64,6 +64,9 @@ export default function DrawingCanvas({
   address = '0x123',
   mode = 'edit',
   mintNft,
+  getImage = null,
+  canMint = false,
+  name = 'Solanity',
 }) {
   // let history = useHistory();
 
@@ -82,7 +85,6 @@ export default function DrawingCanvas({
   const [ink, setInk] = useState({});
   const [drawing, setDrawing] = useLocalStorage('drawing');
   const [ipfsHash, setIpfsHash] = useState<string>('');
-  const [title, setTitle] = useState('SBF Ape Mask General');
   const [drawingSaved, setDrawingSaved] = useState(true);
   const portraitRatio = 1.7;
   const [portrait, setPortrait] = useState<boolean>();
@@ -111,13 +113,18 @@ export default function DrawingCanvas({
       //console.log(_portraitCalc?"portrait mode":"landscape mode")
       // setPortrait(portraitCalc);
     }, 500);
-
     window.addEventListener('resize', debouncedHandleResize);
-
     return (_) => {
       window.removeEventListener('resize', debouncedHandleResize);
     };
   });
+
+  useEffect(() => {
+    getImage.current = async () => {
+      setCanvasDisabled(true);
+      return await generateNftImage();
+    };
+  }, [getImage]);
 
   //Keyboard shortcuts
   useHotkeys('ctrl+z', () => undo());
@@ -215,7 +222,6 @@ export default function DrawingCanvas({
     const loadPage = async () => {
       console.log('loadpage');
       if (drawing && drawing !== '') {
-        console.log('Loading ink');
         try {
           let decompressed = LZ.decompress(drawing);
           currentLines.current = JSON.parse(decompressed)['lines'];
@@ -224,7 +230,6 @@ export default function DrawingCanvas({
           for (const line of currentLines.current) {
             points = points + line.points.length;
           }
-          console.log('Drawing points', currentLines.current.length, points);
           setDrawingSize(points);
           //setLoadedLines(JSON.parse(decompressed)['lines'].length)
           //console.log(decompressed)
@@ -241,6 +246,19 @@ export default function DrawingCanvas({
   }, [drawing]);
 
   const PickerDisplay = pickers[picker % pickers.length];
+
+  const generateNftImage = async () => {
+    let imageData = drawingCanvas.current.canvas.drawing.toDataURL('image/png');
+    let imageBuffer = Buffer.from(imageData.split(',')[1], 'base64');
+    const imageHash = await Hash.of(imageBuffer);
+    try {
+      let res = await addToIPFS(imageBuffer, ipfsConfig);
+      console.log('IPFS RESULT', res, imageHash);
+      return imageHash;
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const generateNftData = async () => {
     setSending(true);
@@ -262,9 +280,9 @@ export default function DrawingCanvas({
 
     const timeInMs = new Date();
     let metadata = {
-      name: title,
-      symbol: 'SYM',
-      description: `Won game  created by ${address} on ${timeInMs.toUTCString()}`,
+      name: name,
+      symbol: 'STY',
+      description: `Created by ${address} on ${timeInMs.toUTCString()}`,
       seller_fee_basis_points: 500,
       image: `https://ipfs.io/ipfs/${imageHash}`,
       animation_url: '',
@@ -274,17 +292,9 @@ export default function DrawingCanvas({
         //     "trait_type": "web",
         //     "value": "yes"
         //   },
-        //   {
-        //     "trait_type": "mobile",
-        //     "value": "yes"
-        //  },
-        //  {
-        //     "trait_type": "extension",
-        //     "value": "yes"
-        //   }
       ],
       collection: {
-        name: title,
+        name,
         family: PLACEHOLDER_COLLECTION_NAME,
       },
       properties: {
@@ -310,7 +320,7 @@ export default function DrawingCanvas({
     let metadataJson = JSON.stringify(metadata);
     const metadataBuffer = Buffer.from(metadataJson);
     const jsonHash = await Hash.of(metadataBuffer);
-
+    const imageResult = addToIPFS(imageBuffer, ipfsConfig);
     // Handle IPFS uploads of drawing, image, and metadata
     try {
       const drawingResult = addToIPFS(drawingBuffer, ipfsConfig);
@@ -342,10 +352,6 @@ export default function DrawingCanvas({
       );
       console.log('Mint Results', mintResult);
       setSending(false);
-      notification.open({
-        message: 'NFT CREATED',
-        description: `tx hash ${mintResult}`,
-      });
     } catch (e) {
       console.log(e);
       setSending(false);
@@ -476,18 +482,23 @@ export default function DrawingCanvas({
         <Form
           layout={'inline'}
           name='generateNftData'
-          //initialValues={{ limit: 0 }}
           onFinish={generateNftData}
           onFinishFailed={onFinishFailed}
           labelAlign={'left'}
           style={{ justifyContent: 'center' }}
         >
-          <Button loading={sending} type='primary' htmlType='submit'>
-            {sending ? 'Creating NFT' : 'Create NFT'}
+          <Button
+            style={{ marginRight: 8, width: '150px' }}
+            loading={sending}
+            type='primary'
+            htmlType='submit'
+            disabled={!canMint}
+          >
+            {sending ? 'Minting NFT' : 'Mint NFT'}
           </Button>
-          <Button onClick={getNft} type='primary'>
+          {/* <Button onClick={getNft} type='primary'>
             Get NFT
-          </Button>
+          </Button> */}
         </Form>
 
         <div style={{ marginTop: 16 }}>
@@ -688,26 +699,21 @@ export default function DrawingCanvas({
         </Row>
         <Row
           style={{
-            width: '40vmin',
-            margin: '0 auto',
-            marginTop: '1vh',
             justifyContent: 'center',
           }}
         >
-          <Space>
-            <Col span={4}>
-              <Popover
-                content={shortcutsPopover}
-                title='Keyboard shortcuts'
-                trigger='click'
-              >
-                <Button>
-                  <InfoCircleOutlined />
-                  Keyboard Shortcuts
-                </Button>
-              </Popover>
-            </Col>
-          </Space>
+          <Col>
+            <Popover
+              content={shortcutsPopover}
+              title='Keyboard shortcuts'
+              trigger='click'
+            >
+              <Button>
+                <InfoCircleOutlined />
+                Keyboard Shortcuts
+              </Button>
+            </Popover>
+          </Col>
         </Row>
       </>
     );
@@ -774,7 +780,7 @@ export default function DrawingCanvas({
           {portrait ? (
             <div className='edit-tools-bottom'>{bottom}</div>
           ) : (
-            <div className='edit-tools'>
+            <div>
               {top}
               <div className='edit-tools-side'>{bottom}</div>
             </div>

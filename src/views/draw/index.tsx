@@ -15,6 +15,7 @@ export const DrawView = () => {
     <Row align='middle' gutter={[16, 16]} justify='center'>
       <DrawingCanvas
         address={userWallet.publicKey?.toString()}
+        canMint={true}
         mintNft={(jsonUri, name, symbol, basisPoints) =>
           mintNft(jsonUri, name, symbol, basisPoints, connection, userWallet)
         }
