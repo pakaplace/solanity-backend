@@ -1,4 +1,4 @@
-import { HashRouter, Route, Switch } from 'react-router-dom';
+import { BrowserRouter, Route, Switch } from 'react-router-dom';
 import React, { useMemo } from 'react';
 import { WalletProvider } from '@solana/wallet-adapter-react';
 import { ConnectionProvider } from './contexts/connection';
@@ -37,7 +37,7 @@ export function Routes() {
     ],
     []
   );
-  const socket = io('http://localhost:8080', {
+  const socket = io(process.env.REACT_APP_SOCKET_HOST, {
     secure: false,
     reconnection: true,
     rejectUnauthorized: false,
@@ -47,7 +47,7 @@ export function Routes() {
     console.log(`connect_error due to ${err.message}`);
   });
   return (
-    <HashRouter basename={'/'}>
+    <BrowserRouter basename={'/'}>
       <SocketContext.Provider value={socket}>
         <ConnectionProvider>
           <WalletProvider wallets={wallets} autoConnect>
@@ -55,7 +55,7 @@ export function Routes() {
               <MarketProvider>
                 <AppLayout>
                   <Switch>
-                    <Route exact path='/' component={() => <HomeView />} />
+                    <Route exact path='/' component={() => <DrawView />} />
                     <Route exact path='/faucet' children={<FaucetView />} />
                     <Route exact path='/draw' children={<DrawView />} />
                     <Route exact path='/game' children={<GameView />} />
@@ -66,6 +66,6 @@ export function Routes() {
           </WalletProvider>
         </ConnectionProvider>
       </SocketContext.Provider>
-    </HashRouter>
+    </BrowserRouter>
   );
 }

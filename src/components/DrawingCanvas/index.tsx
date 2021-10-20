@@ -66,7 +66,8 @@ export default function DrawingCanvas({
   mintNft,
   getImage = null,
   canMint = false,
-  name = 'Solanity',
+  topic = 'Solanity',
+  isSolo = false,
 }) {
   // let history = useHistory();
 
@@ -88,6 +89,7 @@ export default function DrawingCanvas({
   const [drawingSaved, setDrawingSaved] = useState(true);
   const portraitRatio = 1.7;
   const [portrait, setPortrait] = useState<boolean>();
+  const [title, setTitle] = useLocalStorage('title', '');
   const [size, setSize] = useState(['70vmin', '70vmin']); //["70vmin", "70vmin"]) //["50vmin", "50vmin"][750, 500]
 
   function debounce(fn, ms) {
@@ -280,7 +282,7 @@ export default function DrawingCanvas({
 
     const timeInMs = new Date();
     let metadata = {
-      name: name,
+      name: topic,
       symbol: 'STY',
       description: `Created by ${address} on ${timeInMs.toUTCString()}`,
       seller_fee_basis_points: 500,
@@ -294,7 +296,7 @@ export default function DrawingCanvas({
         //   },
       ],
       collection: {
-        name,
+        topic,
         family: PLACEHOLDER_COLLECTION_NAME,
       },
       properties: {
@@ -446,7 +448,7 @@ export default function DrawingCanvas({
       : drawingCanvas.current.lines.unshift(bg);
     drawingCanvas.current.lines.push(bgRef);
 
-    let lines = drawingCanvas.current.lines;
+    let lines = drawingCanvas.current?.lines;
 
     triggerOnChange(lines);
   };
@@ -487,15 +489,28 @@ export default function DrawingCanvas({
           labelAlign={'left'}
           style={{ justifyContent: 'center' }}
         >
-          <Button
-            style={{ marginRight: 8, width: '150px' }}
-            loading={sending}
-            type='primary'
-            htmlType='submit'
-            disabled={!canMint}
-          >
-            {sending ? 'Minting NFT' : 'Mint NFT'}
-          </Button>
+          {isSolo && (
+            <Input
+              placeholder='What is it called?'
+              value={title}
+              key={'topic'}
+              onChange={(e) => setTitle(e.target.value)}
+              style={{ marginBottom: '16px', width: '180px', marginRight: 8 }}
+            />
+          )}
+
+          {canMint && (
+            <Button
+              style={{ marginRight: 8, width: '150px' }}
+              loading={sending}
+              type='primary'
+              htmlType='submit'
+              disabled={!canMint}
+            >
+              {sending ? 'Minting NFT' : 'Mint NFT'}
+            </Button>
+          )}
+
           {/* <Button onClick={getNft} type='primary'>
             Get NFT
           </Button> */}

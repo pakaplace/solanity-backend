@@ -17,12 +17,12 @@ export const AppLayout = React.memo(({ children }) => {
           <Header className='App-Bar'>
             <Link to='/'>
               <div className='app-title'>
-                <h2 style={{ color: '#fff4ea' }}>Cards of Solanity</h2>
+                <h2 style={{ color: '#F8F5F5' }}>Cards of Solanity</h2>
               </div>
             </Link>
             <AppBar />
           </Header>
-          <Content style={{ padding: '0 50px', backgroundColor: '#fff4ea' }}>
+          <Content style={{ padding: '0 50px', backgroundColor: '#F8F5F5' }}>
             {children}
           </Content>
         </Layout>
