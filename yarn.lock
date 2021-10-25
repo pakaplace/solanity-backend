@@ -5476,10 +5476,10 @@ duplexify@^3.4.2, duplexify@^3.6.0:
     readable-stream "^2.0.0"
     stream-shift "^1.0.0"
 
-easy-spl@0.2.0:
-  version "0.2.0"
-  resolved "https://registry.yarnpkg.com/easy-spl/-/easy-spl-0.2.0.tgz#0c54dab21a7a46e4a5acb2f3482588e025f78091"
-  integrity sha512-6JfnuCISP4lHFh6fvG5KTJ3tXkzKBDA4xdNqhdvRdHBlb9Bea2nrcI4bq4KTylPbe7ahSjOv0wqZEgSyqFEPig==
+easy-spl@0.3.1:
+  version "0.3.1"
+  resolved "https://registry.yarnpkg.com/easy-spl/-/easy-spl-0.3.1.tgz#4ac4b6b1a78c2bc3d0d6e68f5eb04a455a8593b2"
+  integrity sha512-JsmYq4QPVLDmCqr41xH7SAaN47uruvAfHSAySHVfCmdPRhkLrGa6Zk37bjkfmqDvhFiPK6w2kBZJLA7h3kZkKg==
   dependencies:
     "@solana/spl-token" "^0.1.8"
     "@solana/web3.js" "^1.29.2"
